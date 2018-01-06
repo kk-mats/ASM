@@ -1,0 +1,82 @@
+8000	NS
+8001	NT
+8002	ANS
+8003	SIGN
+
+START:	setix fffb			// from KEY_D
+		ld a
+		dec a
+		jpz LDREG			// (=1, KEY_D0 is pushed) goto LDREG
+		jp START
+
+LDREG:  setix fffc
+		ld a				// load A from DIP_A
+		setix fffd			// load B from DIP_B
+		ld b
+
+// S * T
+// if T < 0
+//		SignOfT = 1
+//		T'=-T
+// else
+//		T'=T
+// for ; T' != 0; --T'
+//		ANS += T'
+// if SignOfT==1
+//		ANS = -ANS
+// print ANS
+
+// init
+		setix NS
+		st a
+		setix NT
+		st b
+		setix ANS
+		st 00
+		setix CTR
+		st 00
+
+// if T<0 NT=-NT
+		ld a, 80			// 80 = 1000 0000
+		and a				// a : SignOfNT
+		setix SIGN
+		st 01				// SignOfNT = 1
+		not b
+		inc b
+		setix NT
+		st b				// NT=-NT
+
+MUL:	setix NT
+		ld b				// b = NT
+		ld a, 00
+		cmp
+		jpz SS				// b == 0 jp SS
+		setix NT
+		ld b				// b = NT
+		setix 8002
+		ld a				// a = ANS
+		add a
+		st a				// save ANS
+		setix 8003
+		ld b				// b = Counter
+		dec b				// --b
+		jp MUL
+
+SS:	  setix 8004
+		ld a				// a = SignOfT
+		ld b, 01			// b = 1
+		cmp
+		jpz REVERSE			// a ==1 jp
+
+DISPLAY:setix 8002
+		ld a				// a = ANS
+		setix fffe
+		st a				// set ANS to SEG_A+SEG_B
+		jp START
+
+REVERSE:setix 8002
+		ld a				// a = ANS
+		not a
+		inc a
+		st a
+		jp DISPLAY

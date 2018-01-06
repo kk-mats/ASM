@@ -1,0 +1,71 @@
+
+***
+Syntax Definition
+***
+
+<ASM>	:=	(<Label> <Addr>)*
+			([<Label> ":"] <Inst>)*
+
+<Label>	:=	<KeySW> | <DIP_A> | <DIP_B> | <DEG_AB> | <SEG_CD> | [0-9a-zA-Z]+ .
+
+<KeySW>	:=	FFFB .
+<DIP_A>	:=	FFFC .
+<DIP_B>	:=	FFFD .
+<SEG_AB>:=	FFFE .
+<SEG_CD>:=	FFFF .
+
+<Addr>	:=	<Hex>{4} .
+<Hex>	:=	[0-9A-F] .
+
+<Inst>	:=	ld <Reg>, <Label> |
+			ld <Reg>, <Imm> |
+			st <Label>, <Reg> |
+			st <Label>, <Imm> |
+			<ALU> <Reg> |
+			cmp |
+			nop |
+			<JP> <Label> .
+
+<Imm>	:=	<Hex>{2} .
+
+<ALU>	:=	add | sub | and | or | not | inc | dec .
+<JP>	:=	jp | jpc | jpz .
+
+
+***
+asm Expansion
+***
+
+ld <Reg>, <Label>
+	:=	SETIXH
+		<Label.ixh>
+		SETIXL
+		<Label.ixl>
+		LDD<Reg>
+
+ld <Reg>, <Imm>
+	:=	LDI<Reg>
+	:=	<Imm>
+
+st <Label>, <Reg>
+	:=	SETIXH
+		<Label.ixh>
+		SETIXL
+		<Label.ixl>
+		STD<Reg>
+
+st <Label>, <Imm>
+	:=	SETIXH
+		<Label.ixh>
+		SETIXL
+		<Label.ixl>
+		STDI
+		<Imm>
+
+<ALU> <Reg>
+	:=	<ALU><Reg>
+
+<JP> <Label>
+	:=	<JP>
+		<Label.ixh>
+		<Label.ixl>
